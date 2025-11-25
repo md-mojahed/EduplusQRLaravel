@@ -1,0 +1,32 @@
+{
+    "name": "eduplus/qr",
+    "description": "Laravel package for QR Code and Barcode generation using EduplusQR and EduplusBarcode with configurable binary paths.",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Md Mojahedul Islam",
+            "email": "dev.mojahedul@gmail.com",
+            "homepage": "https://md-mojahed.github.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Eduplus\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Eduplus\\EduplusServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
