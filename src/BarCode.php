@@ -2,7 +2,7 @@
 
 namespace Eduplus;
 
-class BarCode
+class BarCode extends Base
 {
     protected $binaryPath = null;
     protected $text = null;
@@ -97,7 +97,7 @@ class BarCode
             $this->height
         );
 
-        exec($command, $output, $returnCode);
+        $this->terminal($command, $output, $returnCode);
 
         if ($returnCode !== 0) {
             $this->errors[] = implode("\n", $output);

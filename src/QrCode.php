@@ -2,7 +2,7 @@
 
 namespace Eduplus;
 
-class QrCode
+class QrCode extends Base
 {
     protected $binaryPath = null;
     protected $text = null;
@@ -96,7 +96,7 @@ class QrCode
             $this->margin
         );
 
-        exec($command, $output, $returnCode);
+        $this->terminal($command, $output, $returnCode);
 
         if ($returnCode !== 0) {
             $this->errors[] = implode("\n", $output);

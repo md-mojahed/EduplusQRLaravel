@@ -2,7 +2,7 @@
     "name": "eduplus/qr",
     "description": "Laravel package for QR Code and Barcode generation using EduplusQR and EduplusBarcode with configurable binary paths.",
     "type": "library",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "MIT",
     "authors": [
         {
