@@ -1,9 +1,10 @@
 {
     "name": "eduplus/qr",
-    "description": "Laravel package for QR Code and Barcode generation using EduplusQR and EduplusBarcode with configurable binary paths.",
+    "description": "Fast QR code and barcode generation for PHP and Laravel (PNG, SVG, PDF) using the standalone EduplusQR binary: logos, styles, Wi-Fi/vCard/payment payloads, batches, ZIP and PDF label sheets.",
     "type": "library",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "license": "MIT",
+    "keywords": ["qr", "qrcode", "barcode", "code128", "ean13", "datamatrix", "pdf417", "laravel", "label", "wifi", "vcard"],
     "authors": [
         {
             "name": "Md Mojahedul Islam",
@@ -11,23 +12,38 @@
             "homepage": "https://md-mojahed.github.io"
         }
     ],
-    "autoload": {
-        "psr-4": {
-            "Eduplus\\": "src/"
-        }
-    },
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
     },
     "suggest": {
-        "illuminate/support": "Required for Laravel integration (^8.0|^9.0|^10.0|^11.0)"
+        "illuminate/support": "For the Laravel service provider, facade and config (^8.0 - ^13.0)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eduplus\\Qr\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Eduplus\\Qr\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Eduplus\\EduplusServiceProvider"
+                "Eduplus\\Qr\\EduplusServiceProvider"
             ]
         }
+    },
+    "config": {
+        "sort-packages": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true

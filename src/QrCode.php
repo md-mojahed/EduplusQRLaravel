@@ -1,138 +1,145 @@
 <?php
 
-namespace Eduplus;
+namespace Eduplus\Qr;
 
-class QrCode extends Base
+/**
+ * QR codes, the main entry point of the package.
+ *
+ *     QrCode::make('https://eduplus-bd.com')->style('rounded')->save($path);
+ *     QrCode::wifi('Campus', 'secret')->toDataUri();
+ *     QrCode::batch()->add('stu-1', $url1)->add('stu-2', $url2)->toBase64();
+ *
+ * In Laravel the settings come from config('eduplus.qr'). Elsewhere, call
+ * QrCode::configure([...]) once (or rely on auto-detection of the binary).
+ * The configuration is shared with BarCode.
+ */
+final class QrCode
 {
-    protected $binaryPath = null;
-    protected $text = null;
-    protected $output = null;
-    protected $size = 256;
-    protected $errorCorrection = 'M';
-    protected $margin = 0;
-    public $errors = [];
-
-    public function __construct()
+    /** A QR code for any text, URL or Unicode string. */
+    public static function make(string $text): Code
     {
-        $this->binaryPath = config('eduplusqr.qr_binary_path');
-        
-        if (!$this->binaryPath || !file_exists($this->binaryPath)) {
-            $this->errors[] = "QR binary not found. Please configure 'qr_binary_path' in config/eduplusqr.php";
-        }
+        return self::client()->qr($text);
     }
 
-    public static function create()
+    /**
+     * A QR code built from a standard content format.
+     *
+     * @param string $kind url, wifi, vcard, mecard, email, sms, tel, geo, event or emv
+     * @param array<string, string|int|float|bool> $fields
+     */
+    public static function payload(string $kind, array $fields): Code
     {
-        return new QrCode();
+        return self::client()->payload($kind, $fields);
     }
 
-    public function text($text)
+    /** Join a Wi-Fi network. $auth: wpa, wpa3, wep or nopass (default: wpa if a password is set). */
+    public static function wifi(string $ssid, ?string $password = null, ?string $auth = null, bool $hidden = false): Code
     {
-        $this->text = $text;
-        return $this;
+        return self::client()->wifi($ssid, $password, $auth, $hidden);
     }
 
-    public function output($output)
+    /**
+     * Contact card. Fields: name, first, last, org, title, phone, mobile,
+     * work_phone, email, url, address, note, birthday (YYYY-MM-DD).
+     *
+     * @param array<string, string> $fields
+     */
+    public static function vcard(array $fields): Code
     {
-        $this->output = $output;
-        return $this;
+        return self::client()->vcard($fields);
     }
 
-    public function size($size)
+    public static function email(string $to, ?string $subject = null, ?string $body = null): Code
     {
-        $this->size = (int)$size;
-        return $this;
+        return self::client()->email($to, $subject, $body);
     }
 
-    public function errorCorrection($level)
+    public static function sms(string $number, ?string $message = null): Code
     {
-        if (!in_array($level, ['L', 'M', 'Q', 'H'])) {
-            $this->errors[] = "Invalid error correction level: {$level}. Use L, M, Q, or H.";
-            return $this;
-        }
-        $this->errorCorrection = $level;
-        return $this;
+        return self::client()->sms($number, $message);
     }
 
-    public function margin($margin)
+    public static function tel(string $number): Code
     {
-        $this->margin = (int)$margin;
-        return $this;
+        return self::client()->tel($number);
     }
 
-    public function generate()
+    public static function geo(float $lat, float $lng): Code
     {
-        if (empty($this->text)) {
-            $this->errors[] = "Text is required";
-            return false;
-        }
-
-        if (empty($this->output)) {
-            $this->errors[] = "Output path is required";
-            return false;
-        }
-
-        if (!$this->binaryPath || !file_exists($this->binaryPath)) {
-            $this->errors[] = "Binary not available";
-            return false;
-        }
-
-        // Create output directory if it doesn't exist
-        $outputDir = dirname($this->output);
-        if (!is_dir($outputDir)) {
-            mkdir($outputDir, 0755, true);
-        }
-
-        $escapedText = escapeshellarg($this->text);
-        $escapedOutput = escapeshellarg($this->output);
-        
-        $command = sprintf(
-            '%s -t %s -o %s -size %d -ec %s -margin %d 2>&1',
-            escapeshellarg($this->binaryPath),
-            $escapedText,
-            $escapedOutput,
-            $this->size,
-            $this->errorCorrection,
-            $this->margin
-        );
-
-        $this->terminal($command, $output, $returnCode);
-
-        if ($returnCode !== 0) {
-            $this->errors[] = implode("\n", $output);
-            return false;
-        }
-
-        if (!file_exists($this->output)) {
-            $this->errors[] = "QR code generation failed";
-            return false;
-        }
-
-        return true;
+        return self::client()->geo($lat, $lng);
     }
 
-    public function generateAndReturn()
+    /**
+     * Calendar event. Fields: summary*, start* ("2026-01-10 10:00", a date or
+     * RFC 3339), end, location, description.
+     *
+     * @param array<string, string> $fields
+     */
+    public static function event(array $fields): Code
     {
-        if ($this->generate()) {
-            return file_get_contents($this->output);
-        }
-        return null;
+        return self::client()->event($fields);
     }
 
-    public function generateBase64()
+    /**
+     * EMVCo merchant payment (Bangla QR and similar). Fields: merchant_name*,
+     * merchant_city*, guid + merchant_id (or accountNN), amount, currency
+     * (default 050 = BDT), country (default BD), mcc, bill, reference, ...
+     *
+     * @param array<string, string> $fields
+     */
+    public static function emv(array $fields): Code
     {
-        if ($this->generate()) {
-            return base64_encode(file_get_contents($this->output));
-        }
-        return null;
+        return self::client()->emv($fields);
     }
 
-    public static function quick($text, $output, $size = 256)
+    /**
+     * Many QR codes in one process. Rows may override the type, so one batch
+     * can also contain barcodes.
+     */
+    public static function batch(): Batch
     {
-        return self::create()
-            ->text($text)
-            ->output($output)
-            ->size($size)
-            ->generate();
+        return self::client()->batch('qr');
+    }
+
+    /** A numbered series of QR codes, e.g. "TICKET-{00001..05000}". */
+    public static function sequence(string $pattern): Batch
+    {
+        return self::batch()->sequence($pattern);
+    }
+
+    // ------------------------------------------------------------ setup
+
+    /**
+     * Configure the binary and defaults for QrCode and BarCode (outside
+     * Laravel, or to override the Laravel config at runtime).
+     *
+     * @param array<string, mixed> $config binary, binary_dir, timeout, base_dir, workers,
+     *                                     defaults, qr_defaults, barcode_defaults
+     */
+    public static function configure(array $config): void
+    {
+        Client::setDefault(Client::fromConfig($config));
+    }
+
+    /** The shared, configured client. */
+    public static function client(): Client
+    {
+        return Client::getDefault();
+    }
+
+    /** Binary version, e.g. "1.0.0". */
+    public static function version(): string
+    {
+        return self::client()->version();
+    }
+
+    /**
+     * Supported code types: name => description.
+     *
+     * @return array<string, string>
+     */
+    public static function types(): array
+    {
+        return self::client()->types();
     }
 }

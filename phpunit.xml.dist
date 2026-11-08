@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="EduplusQR">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <!-- Point this at a built binary, e.g. EDUPLUS_QR_BINARY=../EduplusQR/builds/EduplusQR-darwin-universal -->
+        <env name="EDUPLUS_QR_BINARY" value="" force="false"/>
+    </php>
+</phpunit>
